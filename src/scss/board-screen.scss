@@ -1,0 +1,226 @@
+$cardHeight: 11.11vw;
+$cardWidth: 8.33vw;
+
+@mixin flexFullCentered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin card {
+  @include flexFullCentered;
+  width: $cardWidth;
+  height: $cardHeight;
+  font-size: 2.22vw;
+  border-radius: 5px;
+  -webkit-user-select: none;
+  z-index: 1;
+}
+
+@mixin ball {
+  @include flexFullCentered;
+  border-radius: 50%;
+  width: 6.94vw;
+  height: 6.94vw;
+  font-size: 2.22vw;
+  z-index: 1;
+}
+
+@mixin backgroundLine {
+  width: 0;
+  position: absolute;
+  height: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 0;
+  transition: width 1000ms;
+}
+
+.nav {
+  background: black;
+  color: white;
+  border-bottom: 2px solid #333;
+  display: flex;
+  justify-content: space-between;
+  padding: 5px;
+}
+
+.board {
+  width: 100vw;
+  height: 100vh;
+}
+.draggable-background {
+  width: 100vw;
+  height: calc(100% - 13.89vw);
+  background: black;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  position: relative;
+  overflow: hidden;
+}
+.hand-container {
+  width: 100%;
+  height: 13.89vw;
+  border-top: 4px solid #999;
+  background: #666;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 15px;
+}
+
+.background-line {
+  @include backgroundLine;
+  background: yellow;
+}
+
+.background-broken-line {
+  @include backgroundLine;
+  transition-duration: 500ms;
+  left: 50%;
+  background-image: linear-gradient(to right, yellow 33%, rgba(255,255,255,0) 0%);
+  background-size: 10px 1px;
+}
+
+.card {
+  @include card;
+  background: white;
+  animation: popUp 300ms;
+}
+
+.source-card {
+  @include ball;
+  background: yellow;
+  animation: scaleUp 300ms;
+  transform-origin: center;
+  border: 5px solid #666;
+}
+
+.goal-light {
+  z-index: 1;
+}
+
+.goal-card {
+  @include flexFullCentered;
+  @include ball;
+  background: yellow;
+  border: 5px solid #666;
+}
+
+.card-slot-container {
+  @include flexFullCentered;
+  gap: 20px;
+  position: relative;
+
+  padding: 30px;
+  background: rgb(2,0,36);
+  background: linear-gradient(135deg, rgba(73,100,106,1) 0%, rgba(255,255,255,1) 35%, rgba(73,100,106,1) 100%);
+}
+
+.card-slot {
+  width: $cardWidth + 0.7vw;
+  height: $cardHeight + 0.7vw;
+  background: #666;
+  border-radius: 10px;
+  border: 10px solid #999;
+
+  animation: scaleUpY 300ms;
+  animation-play-state: paused;
+  transform-origin: center;
+}
+
+.targeted-slot {
+  border-color: orange;
+}
+
+.result-light {
+  //position: absolute;
+  //right: 0;
+  //transform: translateX(100%);
+}
+
+.result-display {
+  @include ball;
+  background: radial-gradient(circle, #FFD530FF 0%, orange 60%, orange 100%);
+  border: 5px solid #999;
+  padding: 10px;
+}
+
+.green-light {
+  .result-display, .goal-card {
+    background: radial-gradient(circle, #60E060FF 0%, #30B030FF 60%, #30B030FF 100%);
+  }
+  .pulse-circle {
+    background: radial-gradient(circle, rgba(0, 0, 0, 0) 0%, #00FF00 33%, rgba(0, 0, 0, 0) 67%, #00FF00 100%);
+    animation: bigPulse infinite;
+  }
+}
+
+.pulse-circle {
+  background: radial-gradient(circle, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 50%, yellow 100%);
+  position: absolute;
+  width: 6.94vw;
+  height: 6.94vw;
+  border-radius: 50%;
+  transform: scale(1);
+  animation: pulse;
+  animation-iteration-count: infinite;
+}
+
+.campaign-victory-modal {
+  border: 4px solid white;
+  background: black;
+  color: white;
+  padding: 20px;
+  text-align: center;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+}
+
+.splash-emoji {
+  font-size: 8.88vw;
+  margin-bottom: 15px;
+}
+
+@keyframes pulse {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+@keyframes bigPulse {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(10);
+    opacity: 0;
+  }
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0) }
+  to { transform: scale(1) }
+}
+
+@keyframes scaleUpY {
+  from { transform: scaleY(0) }
+  to { transform: scaleY(1) }
+}
+
+@keyframes popUp {
+  from { transform: translate(0, 200%) }
+  to { transform: translate(0, 0) }
+}

@@ -1,0 +1,38 @@
+.main-screen {
+  background: black;
+  color: white;
+  height: 100vh;
+}
+
+.menu-container {
+  width: 80%;
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: center;
+
+  header {
+    padding-top: 50px;
+    text-align: center;
+  }
+}
+
+.game-title {
+  margin: 0;
+  font-size: 48px;
+}
+
+.blurb {
+  margin: 0;
+}
+
+.play-options {
+  display: flex;
+  margin-top: 20px;
+  > section {
+    flex: 1 1 0;
+  }
+}
+
+.free-play-button {
+  margin-top: 17px;
+}

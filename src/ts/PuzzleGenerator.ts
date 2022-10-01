@@ -16,6 +16,7 @@ const stepsByDifficulty: {[d in PuzzleDifficulty]: number} = {
     'easy': 3,
     'medium': 4,
     'hard': 6,
+    'insane': 6,
 };
 
 export default function generatePuzzle(difficulty: PuzzleDifficulty, answer = 10): Puzzle {

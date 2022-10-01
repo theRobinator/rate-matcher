@@ -24,3 +24,28 @@ export function wait(duration: number) {
         setTimeout(resolve, duration);
     });
 }
+
+export function localStorageSet(key: string, value: any) {
+    const stringified = JSON.stringify(value);
+    try {
+        localStorage.setItem(key, stringified);
+    } catch (err) {
+        document.cookie = `localStorageBackup${key}=${stringified}`;
+    }
+}
+export function localStorageGet(key: string) {
+    try {
+        const item = localStorage.getItem(key);
+        if (item) {
+            return JSON.parse(item);
+        }
+        return item;
+    } catch (err) {
+        const cookieKey = `localStorageBackup${key}=`;
+        const match = document.cookie.split('; ').find(i => i.startsWith(cookieKey));
+        if (match) {
+            return match.split('=')[1];
+        }
+        return undefined;
+    }
+}

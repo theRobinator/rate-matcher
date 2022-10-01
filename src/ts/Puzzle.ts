@@ -25,6 +25,6 @@ export const BINOP_INVERSES: {[k in BinaryOperation]: BinaryOperation} = {
     '/': '*'
 };
 
-export type PuzzleDifficulty = 'easy' | 'medium' | 'hard';
+export type PuzzleDifficulty = 'easy' | 'medium' | 'hard' | 'insane';
 
 export const PRECISION_FACTOR = 100000000;

@@ -1,8 +1,18 @@
+import '../scss/board-screen.scss';
 import generatePuzzle from "./PuzzleGenerator";
-import {BINARY_OPERATOR_FUNCTIONS, BinaryOperation, PRECISION_FACTOR, Puzzle, PuzzleStep} from "./Puzzle";
+import {
+    BINARY_OPERATOR_FUNCTIONS,
+    BinaryOperation,
+    PRECISION_FACTOR,
+    Puzzle,
+    PuzzleDifficulty,
+    PuzzleStep
+} from "./Puzzle";
 import {shuffle, wait} from "./utils";
+import {GameScreen} from "./GameScreen";
+import CampaignState, {CAMPAIGN_LEVELS} from "./state/CampaignState";
 
-export default class BoardScreen {
+export default class BoardScreen implements GameScreen {
     // Permanent elements
     private handContainer: HTMLElement;
     private cardSlotContainer: HTMLElement;
@@ -12,6 +22,8 @@ export default class BoardScreen {
     private goalPulse: HTMLElement;
     private lineIn: HTMLElement;
     private lineOut: HTMLElement;
+    private gameModeDiv: HTMLDivElement;
+    private backButton: HTMLButtonElement;
 
     // Once-per-puzzle elements
     private resultLight: HTMLDivElement;
@@ -28,19 +40,26 @@ export default class BoardScreen {
     private currentFlow: PuzzleStep[] = [];
     private isResetting = true;
 
-    constructor(private element: HTMLDivElement) {
-    }
+    constructor(
+        private element: HTMLDivElement,
+        private difficulty: PuzzleDifficulty,
+        private gameMode: 'campaign' | 'free',
+        private onBack: () => void,
+    ) {}
 
     public async enter() {
         this.setUpDOM();
         await this.startNewPuzzle();
     }
 
+    public async exit() {}
+
     public async startNewPuzzle() {
-        const puzzle = generatePuzzle('hard');
+        const puzzle = generatePuzzle(this.difficulty);
         this.puzzle = puzzle;
         this.evaluateFlow(puzzle.start, puzzle.steps, true);
 
+        this.updateNav();
         this.addStartAndGoal(puzzle);
         this.addCardSlots(puzzle);
         await wait(200);
@@ -57,6 +76,10 @@ export default class BoardScreen {
     private setUpDOM() {
         this.element.innerHTML = `
             <div class="board">
+                <div class="nav">
+                    <div class="game-mode"></div>
+                    <button class="back-button">Back</button>
+                </div>
                 <div class="draggable-background">
                     <div class="background-broken-line"></div>
                     <div class="background-line"></div>
@@ -78,10 +101,22 @@ export default class BoardScreen {
         this.goalPulse = this.element.querySelector('.goal-light .pulse-circle');
         this.lineIn = this.element.querySelector('.background-line');
         this.lineOut = this.element.querySelector('.background-broken-line');
+        this.gameModeDiv = this.element.querySelector('.game-mode');
+        this.backButton = this.element.querySelector('.back-button');
 
         this.element.addEventListener('mousemove', this.onDragMove.bind(this));
         this.element.addEventListener('mouseup', this.onDragEnd.bind(this));
         this.element.addEventListener('mouseleave', this.onDragEnd.bind(this));
+        this.backButton.addEventListener('click', this.onBack);
+    }
+
+    private updateNav() {
+        if (this.gameMode === 'free') {
+            this.gameModeDiv.innerHTML = `Free Play: ${this.difficulty}`;
+        } else {
+            const currentLevel = CampaignState.getCurrentLevel();
+            this.gameModeDiv.innerHTML = `Campaign level ${currentLevel + 1} of ${CAMPAIGN_LEVELS.length} (${this.difficulty})`;
+        }
     }
 
     private addStartAndGoal(puzzle: Puzzle) {
@@ -94,7 +129,7 @@ export default class BoardScreen {
         this.lineIn.style.width = '50%';
     }
     private animateLineOut() {
-        this.lineOut.style.width = 'calc(50% - 100px)';
+        this.lineOut.style.width = 'calc(50% - 6.94vw)';
     }
 
     private async animateCardSlots() {
@@ -155,8 +190,8 @@ export default class BoardScreen {
         await wait(200);
 
         this.lineIn.style.transitionDuration = '2000ms';
-        this.lineIn.style.width = 'calc(100% - 30px)';
-        await wait(1000);
+        this.lineIn.style.width = 'calc(100% - 2.1vw)';
+        await wait(1100);
 
         this.goalPulse.classList.remove('pulse-circle');
         await wait(10);
@@ -164,7 +199,19 @@ export default class BoardScreen {
         this.goalPulse.classList.add('pulse-circle');
 
         await wait(5000);
-        this.resetBoard();
+
+        if (this.gameMode === 'campaign') {
+            const nextLevel = CampaignState.getCurrentLevel() + 1;
+            CampaignState.setCurrentLevel(nextLevel);
+            if (nextLevel >= CAMPAIGN_LEVELS.length) {
+                this.showCampaignVictory();
+            } else {
+                this.difficulty = CAMPAIGN_LEVELS[nextLevel];
+                this.resetBoard();
+            }
+        } else {
+            this.resetBoard();
+        }
     }
 
     private resetBoard() {
@@ -192,6 +239,20 @@ export default class BoardScreen {
 
         this.isResetting = false;
         this.startNewPuzzle();
+    }
+
+    private showCampaignVictory() {
+        const victoryDiv = document.createElement('div');
+        victoryDiv.classList.add('campaign-victory-modal');
+        victoryDiv.innerHTML = `
+            <picture class="splash-emoji">&#127942;</picture>
+            <h1>Congratulations!</h1>
+            <p>You just beat the campaign! You've unlocked a hidden difficulty in the free play mode.</p>
+            <button class="done-button">Back to the Main Menu</button>
+        `;
+        const doneButton = victoryDiv.querySelector('.done-button');
+        doneButton.addEventListener('click', this.onBack);
+        this.element.appendChild(victoryDiv);
     }
 
     private onDragStart(event: MouseEvent) {
@@ -288,7 +349,7 @@ export default class BoardScreen {
         }
         let resultNumber: number;
         if (!flowSoFar.length) {
-            resultNumber = this.getNumberDisplay(this.puzzle.start)
+            resultNumber = this.getNumberDisplay(this.puzzle.start);
             this.resultDiv.innerHTML = resultNumber + '';
         } else if (hasGapsInFlow) {
             this.resultDiv.innerHTML = '-/-';
@@ -296,6 +357,9 @@ export default class BoardScreen {
             const flowResult = this.evaluateFlow(this.puzzle.start, flowSoFar);
             resultNumber = this.getNumberDisplay(flowResult);
             this.resultDiv.innerHTML = resultNumber + '';
+        }
+        if (this.difficulty === 'insane') {
+            this.resultDiv.innerHTML = '???';
         }
         if (resultNumber) {
             this.resultPulse.style.animationPlayState = 'running';
