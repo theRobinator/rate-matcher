@@ -3,29 +3,41 @@ import {BINARY_OPERATOR_FUNCTIONS, BinaryOperation, PRECISION_FACTOR, Puzzle, Pu
 import {shuffle, wait} from "./utils";
 
 export default class BoardScreen {
-    private sourceCard: HTMLElement;
-    private goalCard: HTMLElement;
-    private goalPulse: HTMLElement;
+    // Permanent elements
     private handContainer: HTMLElement;
     private cardSlotContainer: HTMLElement;
-    private resultDiv: HTMLDivElement;
-    private resultPulse: HTMLElement;
+    private sourceCard: HTMLElement;
+    private goalLight: Element;
+    private goalCard: HTMLElement;
+    private goalPulse: HTMLElement;
     private lineIn: HTMLElement;
     private lineOut: HTMLElement;
 
+    // Once-per-puzzle elements
+    private resultLight: HTMLDivElement;
+    private resultDiv: HTMLDivElement;
+    private resultPulse: HTMLElement;
+
+    // Interaction state
     private cardBeingDragged: HTMLElement | null;
     private slotBeingHovered: HTMLElement | null;
-
     private originalDragPosition: [number, number] | null;
+
+    // Puzzle state
     private puzzle: Puzzle;
     private currentFlow: PuzzleStep[] = [];
+    private isResetting = true;
 
     constructor(private element: HTMLDivElement) {
     }
 
     public async enter() {
         this.setUpDOM();
-        const puzzle = generatePuzzle('medium');
+        await this.startNewPuzzle();
+    }
+
+    public async startNewPuzzle() {
+        const puzzle = generatePuzzle('hard');
         this.puzzle = puzzle;
         this.evaluateFlow(puzzle.start, puzzle.steps, true);
 
@@ -36,18 +48,18 @@ export default class BoardScreen {
         await wait(300);
         await this.animateCardSlots();
         this.updateResult();
-        await wait(300);
         this.animateLineOut();
-        await wait(500);
+        await wait(800);
         await this.addCards(puzzle);
+        this.isResetting = false;
     }
 
     private setUpDOM() {
         this.element.innerHTML = `
             <div class="board">
                 <div class="draggable-background">
-                    <div class="background-line"></div>
                     <div class="background-broken-line"></div>
+                    <div class="background-line"></div>
                     <div class="source-card"></div>
                     <div class="card-slot-container"></div>
                     <div class="goal-light">
@@ -62,6 +74,7 @@ export default class BoardScreen {
         this.sourceCard = this.element.querySelector('.source-card');
         this.cardSlotContainer = this.element.querySelector('.card-slot-container');
         this.goalCard = this.element.querySelector('.goal-card');
+        this.goalLight = this.element.querySelector('.goal-light');
         this.goalPulse = this.element.querySelector('.goal-light .pulse-circle');
         this.lineIn = this.element.querySelector('.background-line');
         this.lineOut = this.element.querySelector('.background-broken-line');
@@ -126,12 +139,65 @@ export default class BoardScreen {
             <div class="result-display"></div>
         `;
         resultLight.classList.add('result-light');
+        this.resultLight = resultLight;
         this.resultDiv = resultLight.querySelector('.result-display');
         this.resultPulse = resultLight.querySelector('.pulse-circle');
         this.cardSlotContainer.appendChild(resultLight);
     }
 
+    private async playVictoryAnimation() {
+        this.isResetting = true;
+
+        this.resultPulse.classList.remove('pulse-circle');
+        await wait(10);
+        this.resultLight.classList.add('green-light');
+        this.resultPulse.classList.add('pulse-circle');
+        await wait(200);
+
+        this.lineIn.style.transitionDuration = '2000ms';
+        this.lineIn.style.width = 'calc(100% - 30px)';
+        await wait(1000);
+
+        this.goalPulse.classList.remove('pulse-circle');
+        await wait(10);
+        this.goalLight.classList.add('green-light');
+        this.goalPulse.classList.add('pulse-circle');
+
+        await wait(5000);
+        this.resetBoard();
+    }
+
+    private resetBoard() {
+        this.cardSlotContainer.innerHTML = '';
+        this.handContainer.innerHTML = '';
+        this.goalLight.classList.remove('green-light');
+
+        this.lineIn.style.width = '0';
+        this.lineIn.style.transitionDuration = '1000ms';
+        this.lineOut.style.width = '0';
+        this.lineOut.style.transitionDuration = '1000ms';
+
+        this.resultLight.remove();
+        this.resultLight = null;
+        this.resultDiv.remove();
+        this.resultDiv = null;
+        this.resultPulse.remove();
+        this.resultPulse = null;
+
+        this.cardBeingDragged = null;
+        this.slotBeingHovered = null;
+        this.originalDragPosition = null;
+        this.puzzle = null
+        this.currentFlow = [];
+
+        this.isResetting = false;
+        this.startNewPuzzle();
+    }
+
     private onDragStart(event: MouseEvent) {
+        if (this.isResetting) {
+            return;
+        }
         this.cardBeingDragged = event.target as HTMLElement;
         this.originalDragPosition = this.getCurrentDragTransform();
         const flowIndex = parseInt(this.cardBeingDragged.dataset.flowIndex, 10);
@@ -143,6 +209,9 @@ export default class BoardScreen {
     }
 
     private onDragMove(event: MouseEvent) {
+        if (this.isResetting) {
+            return;
+        }
         if (this.cardBeingDragged) {
             const x = event.clientX - this.originalDragPosition[0];
             const y = event.clientY - this.originalDragPosition[1];
@@ -151,6 +220,9 @@ export default class BoardScreen {
     }
 
     private onDragEnd(event: MouseEvent) {
+        if (this.isResetting) {
+            return;
+        }
         if (this.slotBeingHovered) {
             const hoveredIndex = parseInt(this.slotBeingHovered.dataset.index, 10);
             if (!this.currentFlow[hoveredIndex]) {
@@ -187,14 +259,14 @@ export default class BoardScreen {
     }
 
     private onSlotHoverStart(event: MouseEvent) {
-        if (this.cardBeingDragged) {
+        if (this.cardBeingDragged && !this.isResetting) {
             this.slotBeingHovered = event.target as HTMLElement;
             this.slotBeingHovered.classList.add('targeted-slot');
         }
     }
 
     private onSlotHoverEnd() {
-        if (this.slotBeingHovered) {
+        if (this.slotBeingHovered && !this.isResetting) {
             this.slotBeingHovered.classList.remove('targeted-slot');
             this.slotBeingHovered = null;
         }
@@ -214,7 +286,7 @@ export default class BoardScreen {
                 }
             }
         }
-        let resultNumber;
+        let resultNumber: number;
         if (!flowSoFar.length) {
             resultNumber = this.getNumberDisplay(this.puzzle.start)
             this.resultDiv.innerHTML = resultNumber + '';
@@ -231,6 +303,9 @@ export default class BoardScreen {
             this.resultPulse.style.animationDuration = Math.abs(resultNumber) + 's';
         } else {
             this.resultPulse.style.animationPlayState = 'paused';
+        }
+        if (resultNumber === this.puzzle.answer && flowSoFar.length === this.puzzle.steps.length) {
+            this.playVictoryAnimation();
         }
     }
 

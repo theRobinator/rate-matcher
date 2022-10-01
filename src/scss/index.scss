@@ -141,10 +141,19 @@ body {
 
 .result-display {
 	@include ball;
-	background: orange;
 	background: radial-gradient(circle, #FFD530FF 0%, orange 60%, orange 100%);
 	border: 5px solid #999;
 	padding: 10px;
+}
+
+.green-light {
+	.result-display, .goal-card {
+		background: radial-gradient(circle, #60E060FF 0%, #30B030FF 60%, #30B030FF 100%);
+	}
+	.pulse-circle {
+		background: radial-gradient(circle, rgba(0, 0, 0, 0) 0%, #00FF00 33%, rgba(0, 0, 0, 0) 67%, #00FF00 100%);
+		animation: bigPulse infinite;
+	}
 }
 
 .pulse-circle {
@@ -165,6 +174,17 @@ body {
 	}
 	to {
 		transform: scale(3);
+		opacity: 0;
+	}
+}
+
+@keyframes bigPulse {
+	from {
+		transform: scale(1);
+		opacity: 1;
+	}
+	to {
+		transform: scale(10);
 		opacity: 0;
 	}
 }
