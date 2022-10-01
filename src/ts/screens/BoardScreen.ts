@@ -55,7 +55,15 @@ export default class BoardScreen implements GameScreen {
     public async exit() {}
 
     public async startNewPuzzle() {
-        const puzzle = generatePuzzle(this.difficulty);
+        let puzzle: Puzzle;
+        if (this.gameMode === 'campaign') {
+            const level = CAMPAIGN_LEVELS[CampaignState.getCurrentLevel()];
+            this.difficulty = level.difficulty;
+            puzzle = level.puzzle;
+        } else {
+            puzzle = generatePuzzle(this.difficulty);
+            console.log(JSON.stringify(puzzle, undefined, 2));
+        }
         this.puzzle = puzzle;
         this.evaluateFlow(puzzle.start, puzzle.steps, true);
 
@@ -78,6 +86,7 @@ export default class BoardScreen implements GameScreen {
             <div class="board">
                 <div class="nav">
                     <div class="game-mode"></div>
+                    <button class="regenerate-button" style="display: none">Regenerate</button>
                     <button class="back-button">Back</button>
                 </div>
                 <div class="draggable-background">
@@ -108,6 +117,8 @@ export default class BoardScreen implements GameScreen {
         this.element.addEventListener('mouseup', this.onDragEnd.bind(this));
         this.element.addEventListener('mouseleave', this.onDragEnd.bind(this));
         this.backButton.addEventListener('click', this.onBack);
+
+        this.element.querySelector('.regenerate-button').addEventListener('click', this.resetBoard.bind(this));
     }
 
     private updateNav() {
@@ -206,7 +217,6 @@ export default class BoardScreen implements GameScreen {
             if (nextLevel >= CAMPAIGN_LEVELS.length) {
                 this.showCampaignVictory();
             } else {
-                this.difficulty = CAMPAIGN_LEVELS[nextLevel];
                 this.resetBoard();
             }
         } else {

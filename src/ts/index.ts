@@ -24,7 +24,7 @@ function main() {
 
     function onCampaignStart() {
         const currentLevel = CampaignState.getCurrentLevel();
-        const difficulty = CAMPAIGN_LEVELS[currentLevel];
+        const difficulty = CAMPAIGN_LEVELS[currentLevel].difficulty;
         goToScreen(new BoardScreen(screenDiv, difficulty, 'campaign', onPlayComplete));
     }
 
