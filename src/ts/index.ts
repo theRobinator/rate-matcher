@@ -1,8 +1,8 @@
 import '../scss/index.scss';  // Causes the styles to be loaded on the page
 import './utils';
-import BoardScreen from "./BoardScreen";
-import MainScreen from "./MainScreen";
-import {GameScreen} from "./GameScreen";
+import BoardScreen from "./screens/BoardScreen";
+import MainScreen from "./screens/MainScreen";
+import {GameScreen} from "./screens/GameScreen";
 import CampaignState, {CAMPAIGN_LEVELS} from "./state/CampaignState";
 import {PuzzleDifficulty} from "./Puzzle";
 

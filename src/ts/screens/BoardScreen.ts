@@ -1,5 +1,5 @@
-import '../scss/board-screen.scss';
-import generatePuzzle from "./PuzzleGenerator";
+import '../../scss/board-screen.scss';
+import generatePuzzle from "../PuzzleGenerator";
 import {
     BINARY_OPERATOR_FUNCTIONS,
     BinaryOperation,
@@ -7,10 +7,10 @@ import {
     Puzzle,
     PuzzleDifficulty,
     PuzzleStep
-} from "./Puzzle";
-import {shuffle, wait} from "./utils";
+} from "../Puzzle";
+import {shuffle, wait} from "../utils";
 import {GameScreen} from "./GameScreen";
-import CampaignState, {CAMPAIGN_LEVELS} from "./state/CampaignState";
+import CampaignState, {CAMPAIGN_LEVELS} from "../state/CampaignState";
 
 export default class BoardScreen implements GameScreen {
     // Permanent elements
