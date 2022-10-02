@@ -32,7 +32,9 @@ module.exports = {
           {loader: "css-loader"},
           {loader: "sass-loader"}
       ]},
-      {test: /[\\/]assets[\\/]/, loader: 'file-loader'}
+      {test: /[\\/]assets[\\/]/, loader: 'file-loader', options: {
+        name: '[name].[ext]'
+      }}
     ]
   }
 };
