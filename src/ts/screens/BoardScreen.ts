@@ -11,6 +11,7 @@ import {
 import {shuffle, wait} from "../utils";
 import {GameScreen} from "./GameScreen";
 import CampaignState, {CAMPAIGN_LEVELS} from "../state/CampaignState";
+import AudioPlayer from "../AudioPlayer";
 
 export default class BoardScreen implements GameScreen {
     // Permanent elements
@@ -74,8 +75,10 @@ export default class BoardScreen implements GameScreen {
         this.animateLineIn();
         await wait(300);
         await this.animateCardSlots();
+
         this.updateResult();
         this.animateLineOut();
+
         await wait(800);
         await this.addCards(puzzle);
         this.isResetting = false;
@@ -131,6 +134,7 @@ export default class BoardScreen implements GameScreen {
     }
 
     private addStartAndGoal(puzzle: Puzzle) {
+        AudioPlayer.playSound('startup');
         this.sourceCard.innerHTML = this.getNumberDisplay(puzzle.start) + '';
         this.goalCard.innerHTML = puzzle.answer + '';
         this.goalPulse.style.animationDuration = puzzle.answer + 's';
@@ -140,12 +144,18 @@ export default class BoardScreen implements GameScreen {
         this.lineIn.style.width = '50%';
     }
     private animateLineOut() {
+        AudioPlayer.playSound('brokenline');
         this.lineOut.style.width = 'calc(50% - 6.94vw)';
     }
 
     private async animateCardSlots() {
         for (const child of Array.from(this.cardSlotContainer.children) as HTMLElement[]) {
-            child.style.animationPlayState = 'running';
+            if (child.classList.contains('card-slot')) {
+                child.style.animationPlayState = 'running';
+                AudioPlayer.playSound('click');
+            } else {
+                AudioPlayer.playSound('light');
+            }
             await wait(150);
         }
     }
@@ -163,6 +173,7 @@ export default class BoardScreen implements GameScreen {
             cardElement.addEventListener('mousedown', this.onDragStart.bind(this));
 
             this.handContainer.appendChild(cardElement);
+            AudioPlayer.playSound('tap');
             await wait(100);
         }
     }
@@ -198,6 +209,7 @@ export default class BoardScreen implements GameScreen {
         await wait(10);
         this.resultLight.classList.add('green-light');
         this.resultPulse.classList.add('pulse-circle');
+        AudioPlayer.playSound('powerup');
         await wait(200);
 
         this.lineIn.style.transitionDuration = '2000ms';
@@ -208,6 +220,7 @@ export default class BoardScreen implements GameScreen {
         await wait(10);
         this.goalLight.classList.add('green-light');
         this.goalPulse.classList.add('pulse-circle');
+        AudioPlayer.playSound('success');
 
         await wait(5000);
 
@@ -263,6 +276,7 @@ export default class BoardScreen implements GameScreen {
         const doneButton = victoryDiv.querySelector('.done-button');
         doneButton.addEventListener('click', this.onBack);
         this.element.appendChild(victoryDiv);
+        AudioPlayer.playSound('end');
     }
 
     private onDragStart(event: MouseEvent) {
@@ -310,6 +324,7 @@ export default class BoardScreen implements GameScreen {
                 }
                 this.cardBeingDragged.dataset.flowIndex = this.slotBeingHovered.dataset.index;
                 this.onSlotHoverEnd();
+                AudioPlayer.playSound('tap');
                 this.updateResult();
             }
         }

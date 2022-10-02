@@ -2,6 +2,7 @@ import '../../scss/main-screen.scss';
 import {GameScreen} from "./GameScreen";
 import {PuzzleDifficulty} from "../Puzzle";
 import CampaignState, {CAMPAIGN_LEVELS} from "../state/CampaignState";
+import AudioPlayer from "../AudioPlayer";
 
 export default class MainScreen implements GameScreen {
     private playCampaignButton: HTMLButtonElement;
